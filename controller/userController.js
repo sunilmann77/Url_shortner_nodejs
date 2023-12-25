@@ -35,30 +35,24 @@ module.exports.signout = function (req, res) {
 };
 
 
-module.exports.create = function(req, res) {
+module.exports.create = async function(req, res) {
     if (req.body.password != req.body.confirmpassword) {
         return res.redirect('back');
     }
-
-    User.findOne({ email: req.body.email }, function(err, existingUser) {
-        if (err) {
-            console.log('Error in finding user in signing up');
-            return;
-        }
-
+    try {
+        const existingUser = await User.findOne({ email: req.body.email });
+      
         if (!existingUser) {
-            User.create(req.body, function(err, newUser) {
-                if (err) {
-                    console.log('Error in creating user while signing up');
-                    return;
-                }
-                console.log('user-created');
-                return res.redirect('/users/signin');
-            });
+          const newUser = await User.create(req.body);
+          console.log('User created');
+          return res.redirect('/users/signin');
         } else {
-            return res.redirect('back');
+          return res.redirect('back');
         }
-    });
+      } catch (err) {
+        console.log('Error in finding or creating user:', err);
+        return res.status(500).send('Internal Server Error');
+      }   
 }
 
 
